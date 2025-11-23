@@ -2,39 +2,39 @@
 <img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
 </div>
 
-# Run and deploy your AI Studio app
+# AI Tafsir - Intelligent Quran Research
 
-This contains everything you need to run your app locally.
+**AI Tafsir** is a modern, AI-powered application designed to deepen your understanding of the Quran. By combining authentic Quranic text with Google's advanced Gemini AI, it offers features like semantic search, instant Tafsir generation, and interactive chat for every verse.
 
-View your app in AI Studio: https://ai.studio/apps/drive/1jn_omqDCQG9y6dGMZdazhJujdt9P0FJ1
+## ✨ Key Features
 
-## Run Locally
+- **🧠 AI Semantic Search**: Search for concepts (e.g., "patience", "inheritance") rather than just keywords.
+- **📖 Instant Tafsir**: Generate detailed, context-aware explanations for any Ayah in English or Bengali.
+- **💬 Chat with Ayah**: Ask follow-up questions to the AI about specific verses to clarify meanings. (Accessible via the "Chat" tab inside the Tafsir view).
+- **📝 Surah Overviews**: Get AI-generated summaries and central themes for every Surah.
+- **🎧 Audio Recitation**: Listen to world-renowned reciters with continuous playback.
+- **🔖 Study Tools**: Bookmark verses and add personal notes.
+- **📱 PWA Support**: Install as a native app on your device with offline capabilities.
+- **🌍 Multi-language**: Full support for English and Bengali interfaces and content.
 
-**Prerequisites:**  Node.js
+## 🚀 Getting Started
 
+This application is hosted and ready to use. You do not need to install anything.
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+1. **Open the App**: Navigate to the hosted URL.
+2. **Enter API Key**: You will be prompted to enter your **Google Gemini API Key**.
+   - *Don't have one?* Get a free key from [Google AI Studio](https://aistudio.google.com/app/apikey).
+3. **Start Exploring**: Your key is saved locally on your device, and you're ready to research!
 
-## PWA Support
+## 🔒 Privacy & Security
 
-This application is a Progressive Web App (PWA). It can be installed on your device and works with limited functionality offline.
-- **Installable**: Add to Home Screen on mobile and desktop.
-- **Offline Indicator**: Shows a notification when internet connection is lost.
+- **Bring Your Own Key (BYOK)**: We do not store your API key on our servers. It is saved securely in your browser's local storage.
+- **Direct Connection**: All AI requests are sent directly from your browser to Google's servers.
+- **Local Data**: Your bookmarks and notes are stored locally on your device.
 
-## Deployment
+## 🛠️ Built With
 
-### Vercel
-The project includes a `vercel.json` configuration.
-1. Push your code to a Git repository.
-2. Import the project into Vercel.
-3. The build settings should be automatically detected (Framework: Vite).
-
-### Netlify
-The project includes a `netlify.toml` configuration.
-1. Push your code to a Git repository.
-2. Import the project into Netlify.
-3. The build settings will be automatically applied.
+- **React 19** & **Vite**
+- **Google GenAI SDK** (Gemini Models)
+- **Tailwind CSS**
+- **AlQuran Cloud API**

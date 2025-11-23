@@ -1,0 +1,40 @@
+<div align="center">
+<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+</div>
+
+# Run and deploy your AI Studio app
+
+This contains everything you need to run your app locally.
+
+View your app in AI Studio: https://ai.studio/apps/drive/1jn_omqDCQG9y6dGMZdazhJujdt9P0FJ1
+
+## Run Locally
+
+**Prerequisites:**  Node.js
+
+
+1. Install dependencies:
+   `npm install`
+2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
+3. Run the app:
+   `npm run dev`
+
+## PWA Support
+
+This application is a Progressive Web App (PWA). It can be installed on your device and works with limited functionality offline.
+- **Installable**: Add to Home Screen on mobile and desktop.
+- **Offline Indicator**: Shows a notification when internet connection is lost.
+
+## Deployment
+
+### Vercel
+The project includes a `vercel.json` configuration.
+1. Push your code to a Git repository.
+2. Import the project into Vercel.
+3. The build settings should be automatically detected (Framework: Vite).
+
+### Netlify
+The project includes a `netlify.toml` configuration.
+1. Push your code to a Git repository.
+2. Import the project into Netlify.
+3. The build settings will be automatically applied.
