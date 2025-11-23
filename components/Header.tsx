@@ -1,5 +1,6 @@
 import React from 'react';
 import { Icons } from './Icons';
+import { AVAILABLE_RECITERS } from '../types';
 
 interface HeaderProps {
   onOpenSidebar: () => void;
@@ -11,6 +12,10 @@ interface HeaderProps {
   setArabicFontSize: (size: number) => void;
   translationFontSize: number;
   setTranslationFontSize: (size: number) => void;
+  reciterId: string;
+  setReciterId: (id: string) => void;
+  continuousPlay: boolean;
+  setContinuousPlay: (enabled: boolean) => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -23,6 +28,10 @@ export const Header: React.FC<HeaderProps> = ({
   setArabicFontSize,
   translationFontSize,
   setTranslationFontSize,
+  reciterId,
+  setReciterId,
+  continuousPlay,
+  setContinuousPlay,
 }) => {
   return (
     <header className="h-16 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-4 bg-white dark:bg-slate-950 z-20">
@@ -43,9 +52,9 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Settings Popover */}
         {isSettingsOpen && (
-          <div className="absolute right-0 top-full mt-2 w-72 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-800 p-4 animate-in fade-in zoom-in-95 duration-200 origin-top-right">
+          <div className="absolute right-0 top-full mt-2 w-72 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-800 p-4 animate-in fade-in zoom-in-95 duration-200 origin-top-right max-h-[80vh] overflow-y-auto custom-scrollbar">
             <h4 className="font-bold text-slate-800 dark:text-slate-200 mb-4 text-sm uppercase tracking-wide flex items-center gap-2">
-              <Icons.Settings className="w-4 h-4" /> Appearance
+              <Icons.Settings className="w-4 h-4" /> Settings
             </h4>
             
             {/* Theme Toggle */}
@@ -66,6 +75,38 @@ export const Header: React.FC<HeaderProps> = ({
                 </button>
               </div>
             </div>
+
+            {/* Reciter Selection */}
+            <div className="mb-6">
+              <span className="text-sm text-slate-600 dark:text-slate-400 block mb-2">Reciter</span>
+              <select
+                value={reciterId}
+                onChange={(e) => setReciterId(e.target.value)}
+                className="w-full p-2 rounded-lg bg-slate-100 dark:bg-slate-800 border-none text-sm text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-emerald-500 mb-3"
+              >
+                {AVAILABLE_RECITERS.map((reciter) => (
+                  <option key={reciter.id} value={reciter.id}>
+                    {reciter.name}
+                  </option>
+                ))}
+              </select>
+
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-slate-500 dark:text-slate-400">Auto-play Next</span>
+                <button 
+                  onClick={() => setContinuousPlay(!continuousPlay)}
+                  className={`w-10 h-5 rounded-full transition-colors relative ${continuousPlay ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'}`}
+                >
+                  <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-transform ${continuousPlay ? 'left-6' : 'left-1'}`} />
+                </button>
+              </div>
+            </div>
+
+            <div className="border-t border-slate-100 dark:border-slate-800 my-4"></div>
+
+            <h4 className="font-bold text-slate-800 dark:text-slate-200 mb-4 text-sm uppercase tracking-wide flex items-center gap-2">
+              <Icons.Type className="w-4 h-4" /> Typography
+            </h4>
 
             {/* Arabic Font Size */}
             <div className="mb-4">

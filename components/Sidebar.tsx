@@ -7,8 +7,8 @@ interface SidebarProps {
   onClose: () => void;
   language: Language;
   setLanguage: (lang: Language) => void;
-  viewMode: 'reader' | 'search';
-  setViewMode: (mode: 'reader' | 'search') => void;
+  viewMode: 'reader' | 'search' | 'bookmarks';
+  setViewMode: (mode: 'reader' | 'search' | 'bookmarks') => void;
   surahQuery: string;
   setSurahQuery: (query: string) => void;
   surahs: Surah[];
@@ -82,10 +82,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <nav className="flex-1 overflow-y-auto custom-scrollbar p-2">
            <button 
              onClick={() => setViewMode('search')}
-             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl mb-4 transition-colors ${viewMode === 'search' ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400 font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900'}`}
+             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl mb-1 transition-colors ${viewMode === 'search' ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400 font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900'}`}
            >
              <Icons.Search className="w-5 h-5" />
              {language === 'bn' ? 'এআই অনুসন্ধান' : 'AI Search'}
+           </button>
+
+           <button 
+             onClick={() => setViewMode('bookmarks')}
+             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl mb-4 transition-colors ${viewMode === 'bookmarks' ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400 font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900'}`}
+           >
+             <Icons.BookHeart className="w-5 h-5" />
+             {language === 'bn' ? 'বুকমার্কসমূহ' : 'Bookmarks'}
            </button>
            
            <div className="px-4 pb-2">

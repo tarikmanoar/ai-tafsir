@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { QuranService } from './services/quranService';
 import { GeminiService } from './services/geminiService';
-import { Surah, AyahDisplayData, SearchResult, TafsirData, Language, SurahOverviewData } from './types';
+import { StorageService } from './services/storageService';
+import { Surah, AyahDisplayData, SearchResult, TafsirData, Language, SurahOverviewData, Bookmark } from './types';
 import { Icons } from './components/Icons';
 import { TafsirModal } from './components/TafsirModal';
 import { SurahOverviewModal } from './components/SurahOverviewModal';
@@ -10,8 +11,9 @@ import { Header } from './components/Header';
 import { SearchView } from './components/SearchView';
 import { ReaderView } from './components/ReaderView';
 import { ApiKeyModal } from './components/ApiKeyModal';
+import { BookmarksView } from './components/BookmarksView';
 
-type ViewMode = 'reader' | 'search';
+type ViewMode = 'reader' | 'search' | 'bookmarks';
 
 function App() {
   // Config State
@@ -25,6 +27,9 @@ function App() {
   const [arabicFontSize, setArabicFontSize] = useState(() => parseInt(localStorage.getItem('arabicFontSize') || '36'));
   const [translationFontSize, setTranslationFontSize] = useState(() => parseInt(localStorage.getItem('translationFontSize') || '18'));
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [reciterId, setReciterId] = useState(() => localStorage.getItem('reciterId') || 'ar.alafasy');
+  const [continuousPlay, setContinuousPlay] = useState(() => localStorage.getItem('continuousPlay') === 'true');
+  const [isPlaying, setIsPlaying] = useState(false);
 
   // API Key State
   const [apiKey, setApiKey] = useState(() => {
@@ -40,6 +45,7 @@ function App() {
   const [currentSurah, setCurrentSurah] = useState<Surah | null>(null);
   const [currentAyahNum, setCurrentAyahNum] = useState<number>(1);
   const [ayahData, setAyahData] = useState<AyahDisplayData | null>(null);
+  const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
   
   // Search & Filter State
   const [searchQuery, setSearchQuery] = useState('');
@@ -83,11 +89,13 @@ function App() {
     }
   }, [darkMode]);
 
-  // Persist Fonts
+  // Persist Fonts & Reciter
   useEffect(() => {
     localStorage.setItem('arabicFontSize', arabicFontSize.toString());
     localStorage.setItem('translationFontSize', translationFontSize.toString());
-  }, [arabicFontSize, translationFontSize]);
+    localStorage.setItem('reciterId', reciterId);
+    localStorage.setItem('continuousPlay', continuousPlay.toString());
+  }, [arabicFontSize, translationFontSize, reciterId, continuousPlay]);
 
   // Persist Position
   useEffect(() => {
@@ -124,6 +132,7 @@ function App() {
       try {
         const list = await QuranService.getAllSurahs();
         setSurahs(list);
+        setBookmarks(StorageService.getBookmarks());
 
         // Check URL params first
         const params = new URLSearchParams(window.location.search);
@@ -188,7 +197,7 @@ function App() {
     setIsLoadingAyah(true);
     setError(null);
     try {
-      const data = await QuranService.getAyah(surahNum, ayahNum);
+      const data = await QuranService.getAyah(surahNum, ayahNum, reciterId);
       setAyahData(data);
       setCurrentAyahNum(ayahNum);
       
@@ -201,7 +210,14 @@ function App() {
     } finally {
       setIsLoadingAyah(false);
     }
-  }, [surahs, currentSurah]);
+  }, [surahs, currentSurah, reciterId]);
+
+  // Reload current ayah when reciter changes
+  useEffect(() => {
+    if (currentSurah && currentAyahNum) {
+      loadAyah(currentSurah.number, currentAyahNum);
+    }
+  }, [reciterId]);
 
   // Handle Search
   const handleSearch = async (e: React.FormEvent) => {
@@ -277,8 +293,47 @@ function App() {
     }
   };
 
+  // Bookmark Handlers
+  const handleToggleBookmark = () => {
+    if (!currentSurah || !ayahData) return;
+    
+    const bookmark: Bookmark = {
+      id: `${currentSurah.number}:${currentAyahNum}`,
+      surahNumber: currentSurah.number,
+      ayahNumber: currentAyahNum,
+      surahName: currentSurah.englishName,
+      timestamp: Date.now()
+    };
+    
+    const updated = StorageService.toggleBookmark(bookmark);
+    setBookmarks(updated);
+  };
+
+  const handleRemoveBookmark = (id: string) => {
+    const updated = StorageService.removeBookmark(id);
+    setBookmarks(updated);
+  };
+
+  const handleUpdateNote = (note: string) => {
+    if (!currentSurah) return;
+    const id = `${currentSurah.number}:${currentAyahNum}`;
+    const updated = StorageService.updateNote(id, note);
+    setBookmarks(updated);
+  };
+
+  const selectBookmark = (surahNum: number, ayahNum: number) => {
+    setViewMode('reader');
+    loadAyah(surahNum, ayahNum);
+  };
+
   // Navigation Handlers
-  const handleNextAyah = () => {
+  const handleNextAyah = (keepPlaying = false) => {
+    // If triggered by audio end (keepPlaying=true), we definitely keep playing.
+    // If triggered manually:
+    // - If already playing, we keep playing (seamless skip).
+    // - If paused, we stay paused.
+    // So we don't force stop here anymore.
+    
     if (!currentSurah) return;
     if (currentAyahNum < currentSurah.numberOfAyahs) {
       loadAyah(currentSurah.number, currentAyahNum + 1);
@@ -288,6 +343,7 @@ function App() {
   };
 
   const handlePrevAyah = () => {
+    // Seamless skip for previous too
     if (!currentSurah) return;
     if (currentAyahNum > 1) {
       loadAyah(currentSurah.number, currentAyahNum - 1);
@@ -297,10 +353,20 @@ function App() {
   };
 
   const handleJumpToAyah = (num: number) => {
+     // Jump usually implies manual navigation, but if playing, maybe keep playing?
+     // Let's keep playing if already playing.
      if (!currentSurah || isNaN(num)) return;
      if (num > 0 && num <= currentSurah.numberOfAyahs) {
         loadAyah(currentSurah.number, num);
      }
+  };
+
+  const handleAudioEnded = () => {
+    if (continuousPlay) {
+      handleNextAyah(true);
+    } else {
+      setIsPlaying(false);
+    }
   };
 
   // Swipe Handlers
@@ -334,17 +400,22 @@ function App() {
   };
 
   const selectSearchResult = (surahNum: number, ayahNum: number) => {
+    setIsPlaying(false); // Stop playback when selecting a search result
     setViewMode('reader');
     loadAyah(surahNum, ayahNum);
     setIsSidebarOpen(false);
   };
 
   const selectSurahFromList = (surah: Surah) => {
+    setIsPlaying(false); // Stop playback when selecting a new surah
     setViewMode('reader');
     setCurrentSurah(surah);
     loadAyah(surah.number, 1);
     setIsSidebarOpen(false);
   };
+
+  // Check if current ayah is bookmarked
+  const currentBookmark = currentSurah ? StorageService.getBookmark(currentSurah.number, currentAyahNum) : undefined;
 
   return (
     <div className={`flex h-screen overflow-hidden ${language === 'bn' ? 'font-bengali' : 'font-sans'} bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 transition-colors duration-300`}>
@@ -376,6 +447,10 @@ function App() {
           setArabicFontSize={setArabicFontSize}
           translationFontSize={translationFontSize}
           setTranslationFontSize={setTranslationFontSize}
+          reciterId={reciterId}
+          setReciterId={setReciterId}
+          continuousPlay={continuousPlay}
+          setContinuousPlay={setContinuousPlay}
         />
 
         {/* Scrollable Content */}
@@ -400,6 +475,13 @@ function App() {
               searchResults={searchResults}
               onSelectResult={selectSearchResult}
             />
+          ) : viewMode === 'bookmarks' ? (
+            <BookmarksView
+              bookmarks={bookmarks}
+              onSelectBookmark={selectBookmark}
+              onRemoveBookmark={handleRemoveBookmark}
+              language={language}
+            />
           ) : (
             <ReaderView
               isLoadingAyah={isLoadingAyah}
@@ -419,6 +501,13 @@ function App() {
               onTouchStart={onTouchStart}
               onTouchMove={onTouchMove}
               onTouchEnd={onTouchEnd}
+              isBookmarked={!!currentBookmark}
+              onToggleBookmark={handleToggleBookmark}
+              bookmarkNote={currentBookmark?.note}
+              onUpdateNote={handleUpdateNote}
+              shouldAutoPlay={isPlaying}
+              onPlayStateChange={setIsPlaying}
+              onAudioEnded={handleAudioEnded}
             />
           )}
         </div>
@@ -429,7 +518,9 @@ function App() {
         isOpen={isTafsirOpen} 
         onClose={() => setIsTafsirOpen(false)} 
         data={tafsirData} 
-        isLoading={isLoadingTafsir} 
+        isLoading={isLoadingTafsir}
+        ayahData={ayahData}
+        language={language}
       />
 
       {/* Surah Overview Modal */}

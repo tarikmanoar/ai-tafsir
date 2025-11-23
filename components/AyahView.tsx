@@ -10,6 +10,9 @@ interface AyahViewProps {
   isActive: boolean; // Is this the currently focused ayah?
   arabicFontSize: number;
   translationFontSize: number;
+  onAudioEnded?: () => void;
+  shouldAutoPlay?: boolean;
+  onPlayStateChange?: (isPlaying: boolean) => void;
 }
 
 export const AyahView: React.FC<AyahViewProps> = ({ 
@@ -19,7 +22,10 @@ export const AyahView: React.FC<AyahViewProps> = ({
   isLoadingTafsir, 
   isActive,
   arabicFontSize,
-  translationFontSize
+  translationFontSize,
+  onAudioEnded,
+  shouldAutoPlay = false,
+  onPlayStateChange
 }) => {
   const translation = language === 'bn' ? data.textBn : data.textEn;
   const [isPlaying, setIsPlaying] = useState(false);
@@ -35,8 +41,23 @@ export const AyahView: React.FC<AyahViewProps> = ({
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
+      
+      if (shouldAutoPlay) {
+        const playPromise = audioRef.current.play();
+        if (playPromise !== undefined) {
+          playPromise
+            .then(() => {
+              setIsPlaying(true);
+            })
+            .catch(error => {
+              console.error("Auto-play prevented:", error);
+              setIsPlaying(false);
+              if (onPlayStateChange) onPlayStateChange(false);
+            });
+        }
+      }
     }
-  }, [data]);
+  }, [data, shouldAutoPlay]);
 
   // Close share dropdown when clicking outside
   useEffect(() => {
@@ -54,14 +75,17 @@ export const AyahView: React.FC<AyahViewProps> = ({
     
     if (isPlaying) {
       audioRef.current.pause();
+      if (onPlayStateChange) onPlayStateChange(false);
     } else {
       audioRef.current.play();
+      if (onPlayStateChange) onPlayStateChange(true);
     }
     setIsPlaying(!isPlaying);
   };
 
   const handleAudioEnded = () => {
     setIsPlaying(false);
+    if (onAudioEnded) onAudioEnded();
   };
 
   const handleShare = (platform: 'copy' | 'facebook' | 'twitter') => {

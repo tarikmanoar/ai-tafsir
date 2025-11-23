@@ -1,5 +1,5 @@
 import { GoogleGenAI, Type } from "@google/genai";
-import { SearchResult, TafsirData, AyahDisplayData, SurahOverviewData, Language } from '../types';
+import { SearchResult, TafsirData, AyahDisplayData, SurahOverviewData, Language, ChatMessage } from '../types';
 
 // Initialize Gemini Client
 let ai: GoogleGenAI | null = null;
@@ -187,6 +187,68 @@ export const GeminiService = {
     } catch (error) {
        console.error("Gemini Surah Overview Error:", error);
        throw error;
+    }
+  },
+
+  /**
+   * Chat with the AI about a specific Ayah.
+   */
+  async chatWithAyah(
+    ayahData: AyahDisplayData, 
+    history: ChatMessage[], 
+    userMessage: string, 
+    language: Language
+  ): Promise<string> {
+    if (!ai) throw new Error("API Key missing. Please set it in settings.");
+
+    const langName = language === 'bn' ? 'Bengali (Bangla)' : 'English';
+    const translation = language === 'bn' ? ayahData.textBn : ayahData.textEn;
+
+    // Construct the system instruction / context
+    const contextPrompt = `
+      You are a knowledgeable Quranic Scholar AI assistant.
+      You are discussing the following Ayah with a user in ${langName}:
+      
+      Surah: ${ayahData.surahNameEnglish} (${ayahData.surahNumber})
+      Ayah Number: ${ayahData.ayahNumber}
+      Arabic Text: ${ayahData.arabicText}
+      Translation: ${translation}
+
+      Your goal is to answer the user's follow-up questions about this specific Ayah.
+      - Be respectful, accurate, and concise.
+      - If the user asks something unrelated to the Quran or this Ayah, politely guide them back to the topic.
+      - Use Markdown for formatting if needed.
+      - Answer in ${langName}.
+    `;
+
+    // Convert history to Gemini format
+    // Note: The SDK might have a specific chat format, but for single-turn generation with history context, 
+    // we can just append the history to the prompt or use the chat session if we were maintaining state.
+    // For simplicity and statelessness here, we'll construct a prompt chain.
+    
+    let conversation = `System: ${contextPrompt}\n\n`;
+    
+    history.forEach(msg => {
+      conversation += `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.text}\n`;
+    });
+    
+    conversation += `User: ${userMessage}\nAssistant:`;
+
+    try {
+      const response = await ai.models.generateContent({
+        model: MODEL_ID,
+        contents: conversation,
+        config: {
+          responseMimeType: "text/plain", // We want free text for chat
+        },
+      });
+
+      const text = response.text;
+      if (!text) throw new Error("No response from AI");
+      return text;
+    } catch (error) {
+      console.error("Gemini Chat Error:", error);
+      throw error;
     }
   }
 };

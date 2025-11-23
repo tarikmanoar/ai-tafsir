@@ -74,3 +74,30 @@ export interface SurahOverviewData {
   keyThemes: string[];
   keyLessons: string[];
 }
+
+export interface ChatMessage {
+  role: 'user' | 'model';
+  text: string;
+}
+
+export interface Bookmark {
+  id: string; // Format: "surah:ayah"
+  surahNumber: number;
+  ayahNumber: number;
+  surahName: string;
+  timestamp: number;
+  note?: string;
+}
+
+export interface Reciter {
+  id: string;
+  name: string;
+}
+
+export const AVAILABLE_RECITERS: Reciter[] = [
+  { id: 'ar.alafasy', name: 'Mishary Rashid Alafasy' },
+  { id: 'ar.abdulbasitmurattal', name: 'Abdul Basit (Murattal)' },
+  { id: 'ar.sudais', name: 'Abdurrahmaan As-Sudais' },
+  { id: 'ar.husary', name: 'Mahmoud Khalil Al-Husary' },
+  { id: 'ar.minshawi', name: 'Mohamed Siddiq Al-Minshawi' },
+];

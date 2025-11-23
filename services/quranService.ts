@@ -21,9 +21,9 @@ export const QuranService = {
   /**
    * Fetches a specific Ayah with Arabic, Bengali, and English translations.
    */
-  async getAyah(surahNumber: number, ayahNumber: number): Promise<AyahDisplayData> {
-    // Requesting: Simple Quran (Arabic), Bengali Translation, English Translation (Sahih International), Audio (Alafasy)
-    const editions = 'quran-simple,bn.bengali,en.sahih,ar.alafasy';
+  async getAyah(surahNumber: number, ayahNumber: number, reciterId: string = 'ar.alafasy'): Promise<AyahDisplayData> {
+    // Requesting: Simple Quran (Arabic), Bengali Translation, English Translation (Sahih International), Audio (Dynamic)
+    const editions = `quran-simple,bn.bengali,en.sahih,${reciterId}`;
     const url = `${BASE_URL}/ayah/${surahNumber}:${ayahNumber}/editions/${editions}`;
 
     try {
