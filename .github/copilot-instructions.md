@@ -1,7 +1,7 @@
-# Nur Al-Quran AI - Copilot Instructions
+# AI Tafsir - Copilot Instructions
 
 ## Project Overview
-**Nur Al-Quran AI** is a React-based web application that provides an AI-powered Quran reading and research experience. It combines static Quranic data (text, translations) with dynamic AI features (semantic search, Tafsir generation, Surah overviews) using Google's Gemini API.
+**AI Tafsir** is a React-based web application that provides an AI-powered Quran reading and research experience. It combines static Quranic data (text, translations) with dynamic AI features (semantic search, Tafsir generation, Surah overviews) using Google's Gemini API.
 
 ## Tech Stack
 - **Framework**: React 19 + Vite 6

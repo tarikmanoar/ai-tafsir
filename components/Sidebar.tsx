@@ -54,7 +54,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center">
           <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-500 font-bold text-xl">
              <Icons.BookOpen className="w-6 h-6" />
-             <span className="font-sans">Nur Al-Quran</span>
+             <span className="font-sans">AI Tafsir</span>
           </div>
           <button onClick={onClose} className="lg:hidden text-slate-500">
             <Icons.X className="w-6 h-6" />

@@ -30,7 +30,7 @@ export const Header: React.FC<HeaderProps> = ({
          <button onClick={onOpenSidebar} className="lg:hidden p-2 -ml-2 text-slate-600 dark:text-slate-300">
            <Icons.Menu className="w-6 h-6" />
          </button>
-         <span className="font-bold text-lg text-slate-800 dark:text-white font-sans lg:hidden">Nur Al-Quran</span>
+         <span className="font-bold text-lg text-slate-800 dark:text-white font-sans lg:hidden">AI Tafsir</span>
       </div>
 
       <div className="relative">
