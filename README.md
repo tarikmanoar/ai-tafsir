@@ -24,3 +24,17 @@ View your app in AI Studio: https://ai.studio/apps/drive/1jn_omqDCQG9y6dGMZdazhJ
 This application is a Progressive Web App (PWA). It can be installed on your device and works with limited functionality offline.
 - **Installable**: Add to Home Screen on mobile and desktop.
 - **Offline Indicator**: Shows a notification when internet connection is lost.
+
+## Deployment
+
+### Vercel
+The project includes a `vercel.json` configuration.
+1. Push your code to a Git repository.
+2. Import the project into Vercel.
+3. The build settings should be automatically detected (Framework: Vite).
+
+### Netlify
+The project includes a `netlify.toml` configuration.
+1. Push your code to a Git repository.
+2. Import the project into Netlify.
+3. The build settings will be automatically applied.

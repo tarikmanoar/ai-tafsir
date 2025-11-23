@@ -71,3 +71,8 @@ Isolate external API interactions here. Do not make API calls directly in compon
 - `services/geminiService.ts`: AI logic and prompt engineering.
 - `services/quranService.ts`: Quran data fetching logic.
 - `types.ts`: Shared interfaces.
+
+## Deployment
+- **Vercel**: `vercel.json` included.
+- **Netlify**: `netlify.toml` included.
+- **PWA**: Assets generated in `dist/` on build.
