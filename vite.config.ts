@@ -14,7 +14,7 @@ export default defineConfig(({ mode }) => {
         react(),
         VitePWA({
           registerType: 'autoUpdate',
-          includeAssets: ['icon.svg', 'robots.txt'],
+          includeAssets: ['favicon.svg', 'favicon.png', 'robots.txt', 'logo.svg', 'logo.png'],
           manifest: {
             name: 'AI Tafsir - Quran Research',
             short_name: 'AI Tafsir',
@@ -25,9 +25,19 @@ export default defineConfig(({ mode }) => {
             orientation: 'portrait',
             icons: [
               {
-                src: 'icon.svg',
-                sizes: 'any',
-                type: 'image/svg+xml',
+                src: 'android/android-launchericon-192-192.png',
+                sizes: '192x192',
+                type: 'image/png'
+              },
+              {
+                src: 'android/android-launchericon-512-512.png',
+                sizes: '512x512',
+                type: 'image/png'
+              },
+              {
+                src: 'android/android-launchericon-512-512.png',
+                sizes: '512x512',
+                type: 'image/png',
                 purpose: 'any maskable'
               }
             ]
