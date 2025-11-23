@@ -33,6 +33,26 @@ export const Header: React.FC<HeaderProps> = ({
   continuousPlay,
   setContinuousPlay,
 }) => {
+  const [deferredPrompt, setDeferredPrompt] = React.useState<any>(null);
+
+  React.useEffect(() => {
+    const handler = (e: any) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setDeferredPrompt(null);
+    }
+  };
+
   return (
     <header className="h-16 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-4 bg-white dark:bg-slate-950 z-20">
       <div className="flex items-center gap-2">
@@ -139,6 +159,20 @@ export const Header: React.FC<HeaderProps> = ({
                 className="w-full accent-emerald-500 h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer"
               />
             </div>
+
+            {/* Install App Button */}
+            {deferredPrompt && (
+              <>
+                <div className="border-t border-slate-100 dark:border-slate-800 my-4"></div>
+                <button
+                  onClick={handleInstallClick}
+                  className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-lg transition-colors text-sm font-medium shadow-sm"
+                >
+                  <Icons.Download className="w-4 h-4" />
+                  Install App
+                </button>
+              </>
+            )}
           </div>
         )}
       </div>

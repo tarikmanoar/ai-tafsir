@@ -14,7 +14,7 @@ export default defineConfig(({ mode }) => {
         react(),
         VitePWA({
           registerType: 'autoUpdate',
-          includeAssets: ['favicon.svg', 'favicon.png', 'robots.txt', 'logo.svg', 'logo.png'],
+          includeAssets: ['favicon.svg', 'favicon.png', 'robots.txt', 'logo.svg', 'logo.png', 'banner.png'],
           manifest: {
             name: 'AI Tafsir - Quran Research',
             short_name: 'AI Tafsir',
@@ -23,6 +23,12 @@ export default defineConfig(({ mode }) => {
             background_color: '#ffffff',
             display: 'standalone',
             orientation: 'portrait',
+            id: '/',
+            start_url: '/',
+            scope: '/',
+            lang: 'en',
+            dir: 'ltr',
+            categories: ['education', 'reference', 'religion'],
             icons: [
               {
                 src: 'android/android-launchericon-192-192.png',
@@ -39,6 +45,22 @@ export default defineConfig(({ mode }) => {
                 sizes: '512x512',
                 type: 'image/png',
                 purpose: 'any maskable'
+              }
+            ],
+            screenshots: [
+              {
+                src: 'banner.png',
+                sizes: '1024x500',
+                type: 'image/png',
+                form_factor: 'wide',
+                label: 'AI Tafsir Home Screen'
+              },
+              {
+                src: 'banner.png',
+                sizes: '1024x500',
+                type: 'image/png',
+                form_factor: 'narrow',
+                label: 'AI Tafsir Mobile View'
               }
             ]
           },
