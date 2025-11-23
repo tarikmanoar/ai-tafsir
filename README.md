@@ -18,3 +18,9 @@ View your app in AI Studio: https://ai.studio/apps/drive/1jn_omqDCQG9y6dGMZdazhJ
 2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
 3. Run the app:
    `npm run dev`
+
+## PWA Support
+
+This application is a Progressive Web App (PWA). It can be installed on your device and works with limited functionality offline.
+- **Installable**: Add to Home Screen on mobile and desktop.
+- **Offline Indicator**: Shows a notification when internet connection is lost.

@@ -12,6 +12,7 @@ import { SearchView } from './components/SearchView';
 import { ReaderView } from './components/ReaderView';
 import { ApiKeyModal } from './components/ApiKeyModal';
 import { BookmarksView } from './components/BookmarksView';
+import { OfflineIndicator } from './components/OfflineIndicator';
 
 type ViewMode = 'reader' | 'search' | 'bookmarks';
 
@@ -537,6 +538,9 @@ function App() {
         isOpen={isApiKeyModalOpen} 
         onSave={handleSaveApiKey} 
       />
+
+      {/* Offline Indicator */}
+      <OfflineIndicator />
     </div>
   );
 }
