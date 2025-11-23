@@ -23,16 +23,31 @@ export const AyahView: React.FC<AyahViewProps> = ({
 }) => {
   const translation = language === 'bn' ? data.textBn : data.textEn;
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isShareOpen, setIsShareOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const shareRef = useRef<HTMLDivElement>(null);
 
   // Reset audio when data changes
   useEffect(() => {
     setIsPlaying(false);
+    setIsShareOpen(false);
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
     }
   }, [data]);
+
+  // Close share dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (shareRef.current && !shareRef.current.contains(event.target as Node)) {
+        setIsShareOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const toggleAudio = () => {
     if (!audioRef.current) return;
@@ -49,6 +64,23 @@ export const AyahView: React.FC<AyahViewProps> = ({
     setIsPlaying(false);
   };
 
+  const handleShare = (platform: 'copy' | 'facebook' | 'twitter') => {
+    const url = window.location.href;
+    const text = `Read Surah ${data.surahNameEnglish} ${data.surahNumber}:${data.ayahNumber} on AI Tafsir`;
+
+    if (platform === 'copy') {
+      navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } else if (platform === 'facebook') {
+      window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank');
+      setIsShareOpen(false);
+    } else if (platform === 'twitter') {
+      window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank');
+      setIsShareOpen(false);
+    }
+  };
+
   return (
     <div className={`p-6 rounded-2xl transition-all duration-300 border ${isActive ? 'bg-white dark:bg-slate-800 border-emerald-500 shadow-lg ring-1 ring-emerald-500/50' : 'bg-white/50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 hover:border-emerald-300 dark:hover:border-emerald-700'}`}>
       {/* Header */}
@@ -56,7 +88,7 @@ export const AyahView: React.FC<AyahViewProps> = ({
         <span className="text-sm font-medium text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-900 px-3 py-1 rounded-full">
           {data.surahNameEnglish} {data.surahNumber}:{data.ayahNumber}
         </span>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
            {data.audioUrl && (
              <>
                <audio 
@@ -74,6 +106,35 @@ export const AyahView: React.FC<AyahViewProps> = ({
                </button>
              </>
            )}
+
+           {/* Share Dropdown */}
+           <div className="relative" ref={shareRef}>
+             <button 
+               onClick={() => setIsShareOpen(!isShareOpen)}
+               className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 px-3 py-1.5 rounded-lg transition-colors"
+             >
+               <Icons.Share className="w-4 h-4" />
+               {language === 'bn' ? 'শেয়ার' : 'Share'}
+             </button>
+
+             {isShareOpen && (
+               <div className="absolute top-full right-0 mt-2 w-48 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 p-2 z-20 animate-in fade-in zoom-in-95 duration-200">
+                 <button onClick={() => handleShare('copy')} className="w-full flex items-center gap-3 px-3 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
+                   {copied ? <Icons.Check className="w-4 h-4 text-emerald-500" /> : <Icons.Copy className="w-4 h-4" />}
+                   {copied ? 'Copied!' : 'Copy Link'}
+                 </button>
+                 <button onClick={() => handleShare('facebook')} className="w-full flex items-center gap-3 px-3 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
+                   <Icons.Facebook className="w-4 h-4 text-blue-600" />
+                   Facebook
+                 </button>
+                 <button onClick={() => handleShare('twitter')} className="w-full flex items-center gap-3 px-3 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
+                   <Icons.Twitter className="w-4 h-4 text-sky-500" />
+                   Twitter
+                 </button>
+               </div>
+             )}
+           </div>
+
            <button 
              onClick={onTafsirClick}
              disabled={isLoadingTafsir}

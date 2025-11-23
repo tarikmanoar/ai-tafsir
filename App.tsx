@@ -94,6 +94,12 @@ function App() {
     if (currentSurah) {
       localStorage.setItem('lastSurahNumber', currentSurah.number.toString());
       localStorage.setItem('lastAyahNumber', currentAyahNum.toString());
+      
+      // Update URL
+      const url = new URL(window.location.href);
+      url.searchParams.set('surah', currentSurah.number.toString());
+      url.searchParams.set('ayah', currentAyahNum.toString());
+      window.history.replaceState({}, '', url);
     }
   }, [currentSurah, currentAyahNum]);
 
@@ -119,21 +125,34 @@ function App() {
         const list = await QuranService.getAllSurahs();
         setSurahs(list);
 
-        // Restore last position
-        const lastSurahNum = parseInt(localStorage.getItem('lastSurahNumber') || '0');
-        const lastAyahNum = parseInt(localStorage.getItem('lastAyahNumber') || '1');
+        // Check URL params first
+        const params = new URLSearchParams(window.location.search);
+        const urlSurah = parseInt(params.get('surah') || '0');
+        const urlAyah = parseInt(params.get('ayah') || '0');
 
-        if (lastSurahNum > 0) {
-           const found = list.find(s => s.number === lastSurahNum);
+        let targetSurahNum = 0;
+        let targetAyahNum = 1;
+
+        if (urlSurah > 0) {
+            targetSurahNum = urlSurah;
+            targetAyahNum = urlAyah > 0 ? urlAyah : 1;
+        } else {
+            // Restore last position
+            targetSurahNum = parseInt(localStorage.getItem('lastSurahNumber') || '0');
+            targetAyahNum = parseInt(localStorage.getItem('lastAyahNumber') || '1');
+        }
+
+        if (targetSurahNum > 0) {
+           const found = list.find(s => s.number === targetSurahNum);
            if (found) {
              setCurrentSurah(found);
-             setCurrentAyahNum(lastAyahNum);
+             setCurrentAyahNum(targetAyahNum);
              setViewMode('reader');
              
              // Load the ayah data immediately
              setIsLoadingAyah(true);
              try {
-                const data = await QuranService.getAyah(lastSurahNum, lastAyahNum);
+                const data = await QuranService.getAyah(targetSurahNum, targetAyahNum);
                 setAyahData(data);
              } catch (e) {
                 console.error("Failed to restore last ayah", e);
