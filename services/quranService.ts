@@ -65,5 +65,32 @@ export const QuranService = {
    */
   isValidAyah(surah: Surah, ayahNumber: number): boolean {
     return ayahNumber > 0 && ayahNumber <= surah.numberOfAyahs;
+  },
+
+  /**
+   * Fetches a random verse (Verse of the Day) based on the current date.
+   */
+  async getVerseOfTheDay(surahs: Surah[]): Promise<AyahDisplayData> {
+    if (surahs.length === 0) throw new Error("Surahs not loaded");
+
+    // Simple hash function for the date
+    const today = new Date().toDateString();
+    let hash = 0;
+    for (let i = 0; i < today.length; i++) {
+      hash = ((hash << 5) - hash) + today.charCodeAt(i);
+      hash |= 0; // Convert to 32bit integer
+    }
+    
+    // Use hash to pick a Surah
+    const surahIndex = Math.abs(hash) % surahs.length;
+    const surah = surahs[surahIndex];
+    
+    // Use hash to pick an Ayah
+    // We re-hash to get a different number for the ayah
+    let ayahHash = hash;
+    ayahHash = ((ayahHash << 5) - ayahHash) + surah.number;
+    const ayahNum = (Math.abs(ayahHash) % surah.numberOfAyahs) + 1;
+
+    return this.getAyah(surah.number, ayahNum);
   }
 };

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Icons } from './Icons';
-import { SearchResult, Language } from '../types';
+import { SearchResult, Language, AyahDisplayData } from '../types';
 
 interface SearchViewProps {
   language: Language;
@@ -10,6 +10,7 @@ interface SearchViewProps {
   isSearching: boolean;
   searchResults: SearchResult[];
   onSelectResult: (surahNum: number, ayahNum: number) => void;
+  verseOfTheDay: AyahDisplayData | null;
 }
 
 export const SearchView: React.FC<SearchViewProps> = ({
@@ -20,9 +21,10 @@ export const SearchView: React.FC<SearchViewProps> = ({
   isSearching,
   searchResults,
   onSelectResult,
+  verseOfTheDay,
 }) => {
   return (
-    <div className="max-w-3xl mx-auto mt-8 md:mt-16 text-center">
+    <div className="max-w-3xl mx-auto mt-8 md:mt-16 text-center pb-20">
       <div className="mb-8">
         <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-400 to-emerald-600 text-white mb-6 shadow-xl shadow-emerald-500/20">
           <Icons.Sparkles className="w-8 h-8" />
@@ -57,6 +59,39 @@ export const SearchView: React.FC<SearchViewProps> = ({
           )}
         </button>
       </form>
+
+      {/* Verse of the Day (Only show when not searching and no results) */}
+      {!isSearching && searchResults.length === 0 && verseOfTheDay && (
+        <div className="max-w-2xl mx-auto mt-12 animate-in fade-in duration-700">
+          <div className="flex items-center justify-center gap-2 mb-4 text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-widest text-xs">
+            <Icons.Sparkles className="w-4 h-4" />
+            {language === 'bn' ? 'আজকের আয়াত' : 'Verse of the Day'}
+          </div>
+          
+          <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 md:p-8 shadow-lg border border-slate-100 dark:border-slate-700 relative overflow-hidden group">
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-400 to-emerald-600"></div>
+            
+            <div className="text-center mb-6">
+              <p className="font-arabic text-2xl md:text-3xl text-slate-800 dark:text-slate-200 leading-loose mb-4">
+                {verseOfTheDay.arabicText}
+              </p>
+              <p className={`text-slate-600 dark:text-slate-400 text-sm md:text-base leading-relaxed ${language === 'bn' ? 'font-bengali' : 'font-sans'}`}>
+                {language === 'bn' ? verseOfTheDay.textBn : verseOfTheDay.textEn}
+              </p>
+            </div>
+
+            <div className="flex justify-center">
+              <button 
+                onClick={() => onSelectResult(verseOfTheDay.surahNumber, verseOfTheDay.ayahNumber)}
+                className="flex items-center gap-2 px-5 py-2 rounded-full bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:text-emerald-600 dark:hover:text-emerald-400 transition-all text-sm font-medium"
+              >
+                <span>{verseOfTheDay.surahNameEnglish} {verseOfTheDay.surahNumber}:{verseOfTheDay.ayahNumber}</span>
+                <Icons.ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {searchResults.length > 0 && (
         <div className="text-left space-y-4 animate-in slide-in-from-bottom-4 duration-500">

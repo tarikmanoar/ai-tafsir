@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Icons } from './Icons';
-import { Surah, Language } from '../types';
+import { Surah, Language, JUZ_DATA } from '../types';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -15,6 +15,7 @@ interface SidebarProps {
   currentSurah: Surah | null;
   currentAyahNum: number;
   onSelectSurah: (surah: Surah) => void;
+  onSelectJuz: (surahNum: number, ayahNum: number) => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -30,7 +31,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
   currentSurah,
   currentAyahNum,
   onSelectSurah,
+  onSelectJuz,
 }) => {
+  const [navTab, setNavTab] = useState<'surah' | 'juz'>('surah');
+
   // Filter Surahs Logic
   const filteredSurahs = surahs.filter(s => 
     s.number.toString().includes(surahQuery) || 
@@ -96,59 +100,105 @@ export const Sidebar: React.FC<SidebarProps> = ({
              {language === 'bn' ? 'বুকমার্কসমূহ' : 'Bookmarks'}
            </button>
            
-           <div className="px-4 pb-2">
-              <div className="relative">
-                <Icons.Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400" />
-                <input
-                  type="text"
-                  value={surahQuery}
-                  onChange={(e) => setSurahQuery(e.target.value)}
-                  placeholder={language === 'bn' ? "সূরা খুঁজুন..." : "Filter Surahs..."}
-                  className="w-full pl-8 pr-3 py-2 text-xs bg-slate-100 dark:bg-slate-900 border-none rounded-lg focus:ring-1 focus:ring-emerald-500 placeholder-slate-400 text-slate-700 dark:text-slate-300 font-sans"
-                />
-              </div>
+           {/* Navigation Tabs (Surah / Juz) */}
+           <div className="px-4 mb-2">
+             <div className="flex border-b border-slate-200 dark:border-slate-800">
+               <button
+                 onClick={() => setNavTab('surah')}
+                 className={`flex-1 pb-2 text-sm font-medium transition-colors border-b-2 ${navTab === 'surah' ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400' : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'}`}
+               >
+                 {language === 'bn' ? 'সূরা' : 'Surah'}
+               </button>
+               <button
+                 onClick={() => setNavTab('juz')}
+                 className={`flex-1 pb-2 text-sm font-medium transition-colors border-b-2 ${navTab === 'juz' ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400' : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'}`}
+               >
+                 {language === 'bn' ? 'পারা' : 'Juz'}
+               </button>
+             </div>
            </div>
            
-           <div className="px-4 py-2 text-xs font-bold text-slate-400 uppercase tracking-wider font-sans">
-             Surahs
-           </div>
-           
-           <div className="space-y-1">
-             {filteredSurahs.map(surah => {
-               const isActive = currentSurah?.number === surah.number && viewMode === 'reader';
-               return (
-                 <button
-                   key={surah.number}
-                   id={`surah-${surah.number}`}
-                   onClick={() => onSelectSurah(surah)}
-                   className={`w-full flex items-center justify-between px-4 py-2.5 rounded-lg text-sm transition-all ${isActive ? 'bg-emerald-500 text-white shadow-md' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-900'}`}
-                 >
-                   <div className="flex items-center gap-3">
-                     <span className={`flex items-center justify-center w-6 h-6 text-xs rounded-full border font-sans ${isActive ? 'border-white/30 bg-white/10' : 'border-slate-300 dark:border-slate-700 text-slate-500'}`}>
-                       {surah.number}
-                     </span>
-                     <div className="flex flex-col items-start font-sans">
-                        <span className="font-medium">{surah.englishName}</span>
-                        <div className="flex gap-2 items-center">
-                          <span className={`text-[10px] ${isActive ? 'opacity-80' : 'opacity-60'}`}>{surah.englishNameTranslation}</span>
-                          {isActive && (
-                            <span className="text-[10px] bg-white/20 px-1.5 py-0.5 rounded font-mono">
-                               Ayah {currentAyahNum}
-                            </span>
-                          )}
-                        </div>
-                     </div>
-                   </div>
-                   <span className="font-arabic text-lg opacity-80">{surah.name.replace('سورة', '')}</span>
-                 </button>
-               );
-             })}
-             {filteredSurahs.length === 0 && (
-               <div className="px-4 py-4 text-center text-xs text-slate-400">
-                 No Surah found.
+           {navTab === 'surah' ? (
+             <>
+               <div className="px-4 pb-2">
+                  <div className="relative">
+                    <Icons.Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400" />
+                    <input
+                      type="text"
+                      value={surahQuery}
+                      onChange={(e) => setSurahQuery(e.target.value)}
+                      placeholder={language === 'bn' ? "সূরা খুঁজুন..." : "Filter Surahs..."}
+                      className="w-full pl-8 pr-3 py-2 text-xs bg-slate-100 dark:bg-slate-900 border-none rounded-lg focus:ring-1 focus:ring-emerald-500 placeholder-slate-400 text-slate-700 dark:text-slate-300 font-sans"
+                    />
+                  </div>
                </div>
-             )}
-           </div>
+               
+               <div className="space-y-1">
+                 {filteredSurahs.map(surah => {
+                   const isActive = currentSurah?.number === surah.number && viewMode === 'reader';
+                   return (
+                     <button
+                       key={surah.number}
+                       id={`surah-${surah.number}`}
+                       onClick={() => onSelectSurah(surah)}
+                       className={`w-full flex items-center justify-between px-4 py-2.5 rounded-lg text-sm transition-all ${isActive ? 'bg-emerald-500 text-white shadow-md' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-900'}`}
+                     >
+                       <div className="flex items-center gap-3">
+                         <span className={`flex items-center justify-center w-6 h-6 text-xs rounded-full border font-sans ${isActive ? 'border-white/30 bg-white/10' : 'border-slate-300 dark:border-slate-700 text-slate-500'}`}>
+                           {surah.number}
+                         </span>
+                         <div className="flex flex-col items-start font-sans">
+                            <span className="font-medium">{surah.englishName}</span>
+                            <div className="flex gap-2 items-center">
+                              <span className={`text-[10px] ${isActive ? 'opacity-80' : 'opacity-60'}`}>{surah.englishNameTranslation}</span>
+                              {isActive && (
+                                <span className="text-[10px] bg-white/20 px-1.5 py-0.5 rounded font-mono">
+                                   Ayah {currentAyahNum}
+                                </span>
+                              )}
+                            </div>
+                         </div>
+                       </div>
+                       <span className="font-arabic text-lg opacity-80">{surah.name.replace('سورة', '')}</span>
+                     </button>
+                   );
+                 })}
+                 {filteredSurahs.length === 0 && (
+                   <div className="px-4 py-4 text-center text-xs text-slate-400">
+                     No Surah found.
+                   </div>
+                 )}
+               </div>
+             </>
+           ) : (
+             <div className="space-y-1 px-2">
+               {JUZ_DATA.map(juz => {
+                 // Determine if this Juz is active (simple check: if current surah/ayah is >= juz start and < next juz start)
+                 // For simplicity, we just highlight if we clicked it or if it matches roughly.
+                 // A precise check requires more logic, let's keep it simple for now or just no highlight.
+                 return (
+                   <button
+                     key={juz.juzNumber}
+                     onClick={() => onSelectJuz(juz.surahNumber, juz.ayahNumber)}
+                     className="w-full flex items-center justify-between px-4 py-3 rounded-lg text-sm transition-all text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-900"
+                   >
+                     <div className="flex items-center gap-3">
+                       <span className="flex items-center justify-center w-8 h-8 text-xs rounded-full bg-slate-100 dark:bg-slate-800 text-emerald-600 font-bold">
+                         {juz.juzNumber}
+                       </span>
+                       <div className="flex flex-col items-start">
+                         <span className="font-medium">{language === 'bn' ? juz.nameBn : juz.nameEn}</span>
+                         <span className="text-xs text-slate-400">
+                           {language === 'bn' ? 'শুরু:' : 'Starts:'} Surah {juz.surahNumber}, Ayah {juz.ayahNumber}
+                         </span>
+                       </div>
+                     </div>
+                     <Icons.ChevronRight className="w-4 h-4 text-slate-400" />
+                   </button>
+                 );
+               })}
+             </div>
+           )}
         </nav>
       </aside>
     </>

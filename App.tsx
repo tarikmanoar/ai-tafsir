@@ -47,6 +47,7 @@ function App() {
   const [currentAyahNum, setCurrentAyahNum] = useState<number>(1);
   const [ayahData, setAyahData] = useState<AyahDisplayData | null>(null);
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
+  const [verseOfTheDay, setVerseOfTheDay] = useState<AyahDisplayData | null>(null);
   
   // Search & Filter State
   const [searchQuery, setSearchQuery] = useState('');
@@ -134,6 +135,14 @@ function App() {
         const list = await QuranService.getAllSurahs();
         setSurahs(list);
         setBookmarks(StorageService.getBookmarks());
+
+        // Fetch Verse of the Day
+        try {
+           const vod = await QuranService.getVerseOfTheDay(list);
+           setVerseOfTheDay(vod);
+        } catch (e) {
+           console.error("Failed to fetch VOD", e);
+        }
 
         // Check URL params first
         const params = new URLSearchParams(window.location.search);
@@ -415,6 +424,13 @@ function App() {
     setIsSidebarOpen(false);
   };
 
+  const selectJuz = (surahNum: number, ayahNum: number) => {
+    setIsPlaying(false);
+    setViewMode('reader');
+    loadAyah(surahNum, ayahNum);
+    setIsSidebarOpen(false);
+  };
+
   // Check if current ayah is bookmarked
   const currentBookmark = currentSurah ? StorageService.getBookmark(currentSurah.number, currentAyahNum) : undefined;
 
@@ -434,6 +450,7 @@ function App() {
         currentSurah={currentSurah}
         currentAyahNum={currentAyahNum}
         onSelectSurah={selectSurahFromList}
+        onSelectJuz={selectJuz}
       />
 
       {/* Main Content Area */}
@@ -475,6 +492,7 @@ function App() {
               isSearching={isSearching}
               searchResults={searchResults}
               onSelectResult={selectSearchResult}
+              verseOfTheDay={verseOfTheDay}
             />
           ) : viewMode === 'bookmarks' ? (
             <BookmarksView

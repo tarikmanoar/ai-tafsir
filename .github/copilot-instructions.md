@@ -62,6 +62,10 @@ Isolate external API interactions here. Do not make API calls directly in compon
 - Services should `throw` errors.
 - UI components (specifically `App.tsx`) should `catch` errors and set an `error` state to display user-friendly messages.
 
+## Navigation
+- **Juz Navigation**: Sidebar supports switching between Surah and Juz (Para) lists.
+- **Verse of the Day**: Displayed on the home/search screen.
+
 ## Key Files
 - `App.tsx`: Main controller, layout, and state container.
 - `services/geminiService.ts`: AI logic and prompt engineering.
