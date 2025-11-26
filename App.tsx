@@ -469,6 +469,7 @@ function App() {
           setReciterId={setReciterId}
           continuousPlay={continuousPlay}
           setContinuousPlay={setContinuousPlay}
+          onEditApiKey={() => setIsApiKeyModalOpen(true)}
         />
 
         {/* Scrollable Content */}

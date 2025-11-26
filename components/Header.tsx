@@ -16,6 +16,7 @@ interface HeaderProps {
   setReciterId: (id: string) => void;
   continuousPlay: boolean;
   setContinuousPlay: (enabled: boolean) => void;
+  onEditApiKey: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -32,6 +33,7 @@ export const Header: React.FC<HeaderProps> = ({
   setReciterId,
   continuousPlay,
   setContinuousPlay,
+  onEditApiKey,
 }) => {
   const [deferredPrompt, setDeferredPrompt] = React.useState<any>(null);
 
@@ -173,6 +175,19 @@ export const Header: React.FC<HeaderProps> = ({
                 </button>
               </>
             )}
+
+            {/* Change API Key */}
+            <div className="border-t border-slate-100 dark:border-slate-800 my-4"></div>
+            <button
+              onClick={() => {
+                setIsSettingsOpen(false);
+                onEditApiKey();
+              }}
+              className="w-full flex items-center justify-center gap-2 text-slate-500 hover:text-emerald-600 hover:bg-slate-50 dark:hover:bg-slate-800 py-2 rounded-lg transition-colors text-sm font-medium"
+            >
+              <Icons.Key className="w-4 h-4" />
+              Change API Key
+            </button>
           </div>
         )}
       </div>

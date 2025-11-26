@@ -18,7 +18,20 @@ export const TafsirModal: React.FC<TafsirModalProps> = ({ isOpen, onClose, data,
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isChatLoading, setIsChatLoading] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const speechRef = useRef<SpeechSynthesisUtterance | null>(null);
+
+  // Load available voices
+  useEffect(() => {
+    const updateVoices = () => {
+      setVoices(window.speechSynthesis.getVoices());
+    };
+    updateVoices();
+    window.speechSynthesis.onvoiceschanged = updateVoices;
+    return () => { window.speechSynthesis.onvoiceschanged = null; };
+  }, []);
 
   // Reset state when modal opens/closes or ayah changes
   useEffect(() => {
@@ -26,8 +39,71 @@ export const TafsirModal: React.FC<TafsirModalProps> = ({ isOpen, onClose, data,
       setActiveTab('tafsir');
       setChatHistory([]);
       setInputMessage('');
+      stopSpeaking();
+    } else {
+      stopSpeaking();
     }
   }, [isOpen, ayahData]);
+
+  // Cleanup speech on unmount
+  useEffect(() => {
+    return () => stopSpeaking();
+  }, []);
+
+  const stopSpeaking = () => {
+    window.speechSynthesis.cancel();
+    setIsSpeaking(false);
+    speechRef.current = null;
+  };
+
+  const handleSpeak = () => {
+    if (!data?.tafsirText) return;
+
+    if (isSpeaking) {
+      stopSpeaking();
+      return;
+    }
+
+    // Strip markdown and clean text for better speech
+    const textToSpeak = data.tafsirText
+      .replace(/[#*`_]/g, '') // Remove basic markdown chars
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // Replace links with text
+      .replace(/\n+/g, '. '); // Replace newlines with pauses
+
+    // Cancel any active speech first
+    window.speechSynthesis.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(textToSpeak);
+    
+    // Select appropriate voice
+    const targetLang = language === 'bn' ? 'bn' : 'en';
+    const voice = voices.find(v => v.lang.startsWith(targetLang));
+    
+    if (voice) {
+      utterance.voice = voice;
+      utterance.lang = voice.lang;
+    } else {
+      utterance.lang = language === 'bn' ? 'bn-BD' : 'en-US';
+    }
+
+    utterance.rate = 0.9;
+    
+    utterance.onstart = () => setIsSpeaking(true);
+    
+    utterance.onend = () => {
+      setIsSpeaking(false);
+      speechRef.current = null;
+    };
+
+    utterance.onerror = (e) => {
+      console.error("Speech synthesis error:", e);
+      setIsSpeaking(false);
+      speechRef.current = null;
+    };
+
+    speechRef.current = utterance;
+    window.speechSynthesis.speak(utterance);
+  };
 
   // Auto-scroll to bottom of chat
   useEffect(() => {
@@ -129,13 +205,22 @@ export const TafsirModal: React.FC<TafsirModalProps> = ({ isOpen, onClose, data,
               <div className={`absolute inset-0 overflow-y-auto p-6 md:p-8 custom-scrollbar transition-opacity duration-300 ${activeTab === 'tafsir' ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}>
                 <div className="space-y-6">
                   {/* Reference Header */}
-                  <div className="bg-emerald-50 dark:bg-emerald-900/20 p-4 rounded-xl border border-emerald-100 dark:border-emerald-800/30">
-                    <h4 className="text-xl font-bold text-emerald-800 dark:text-emerald-300 mb-1">
-                      {data.ayahReference}
-                    </h4>
-                    <p className="font-arabic text-2xl text-slate-700 dark:text-slate-300 opacity-80" dir="rtl">
-                      {data.arabicSnippet}...
-                    </p>
+                  <div className="bg-emerald-50 dark:bg-emerald-900/20 p-4 rounded-xl border border-emerald-100 dark:border-emerald-800/30 flex justify-between items-start">
+                    <div>
+                      <h4 className="text-xl font-bold text-emerald-800 dark:text-emerald-300 mb-1">
+                        {data.ayahReference}
+                      </h4>
+                      <p className="font-arabic text-2xl text-slate-700 dark:text-slate-300 opacity-80" dir="rtl">
+                        {data.arabicSnippet}...
+                      </p>
+                    </div>
+                    <button
+                      onClick={handleSpeak}
+                      className="p-2 rounded-full bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-slate-700 transition-colors shadow-sm"
+                      title={isSpeaking ? "Stop reading" : "Read aloud"}
+                    >
+                      {isSpeaking ? <Icons.VolumeX className="w-5 h-5" /> : <Icons.Volume2 className="w-5 h-5" />}
+                    </button>
                   </div>
 
                   {/* Themes */}
