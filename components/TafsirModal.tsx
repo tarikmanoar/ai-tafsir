@@ -19,6 +19,7 @@ export const TafsirModal: React.FC<TafsirModalProps> = ({ isOpen, onClose, data,
   const [inputMessage, setInputMessage] = useState('');
   const [isChatLoading, setIsChatLoading] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isListening, setIsListening] = useState(false);
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const speechRef = useRef<SpeechSynthesisUtterance | null>(null);
@@ -40,20 +41,65 @@ export const TafsirModal: React.FC<TafsirModalProps> = ({ isOpen, onClose, data,
       setChatHistory([]);
       setInputMessage('');
       stopSpeaking();
+      setIsListening(false);
     } else {
       stopSpeaking();
+      setIsListening(false);
     }
   }, [isOpen, ayahData]);
 
   // Cleanup speech on unmount
   useEffect(() => {
-    return () => stopSpeaking();
+    return () => {
+      stopSpeaking();
+      setIsListening(false);
+    };
   }, []);
 
   const stopSpeaking = () => {
     window.speechSynthesis.cancel();
     setIsSpeaking(false);
     speechRef.current = null;
+  };
+
+  const handleVoiceInput = () => {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      alert("Voice input is not supported in this browser.");
+      return;
+    }
+
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+
+    recognition.lang = language === 'bn' ? 'bn-BD' : 'en-US';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onstart = () => {
+      setIsListening(true);
+    };
+
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      setInputMessage(prev => prev ? `${prev} ${transcript}` : transcript);
+      setIsListening(false);
+    };
+
+    recognition.onerror = (event: any) => {
+      console.error("Speech recognition error", event.error);
+      setIsListening(false);
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    try {
+      recognition.start();
+    } catch (e) {
+      console.error(e);
+      setIsListening(false);
+    }
   };
 
   const handleSpeak = () => {
@@ -284,14 +330,24 @@ export const TafsirModal: React.FC<TafsirModalProps> = ({ isOpen, onClose, data,
                 {/* Input Area */}
                 <div className="p-4 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700">
                   <form onSubmit={handleSendMessage} className="flex gap-2">
-                    <input
-                      type="text"
-                      value={inputMessage}
-                      onChange={(e) => setInputMessage(e.target.value)}
-                      placeholder={language === 'bn' ? "এই আয়াত সম্পর্কে প্রশ্ন করুন..." : "Ask about this Ayah..."}
-                      className="flex-1 px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                      disabled={isChatLoading}
-                    />
+                    <div className="relative flex-1">
+                      <input
+                        type="text"
+                        value={inputMessage}
+                        onChange={(e) => setInputMessage(e.target.value)}
+                        placeholder={language === 'bn' ? "এই আয়াত সম্পর্কে প্রশ্ন করুন..." : "Ask about this Ayah..."}
+                        className="w-full pl-4 pr-10 py-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        disabled={isChatLoading}
+                      />
+                      <button
+                        type="button"
+                        onClick={handleVoiceInput}
+                        className={`absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full transition-colors ${isListening ? 'bg-red-500 text-white animate-pulse' : 'text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'}`}
+                        title="Voice Input"
+                      >
+                        {isListening ? <Icons.MicOff className="w-4 h-4" /> : <Icons.Mic className="w-4 h-4" />}
+                      </button>
+                    </div>
                     <button
                       type="submit"
                       disabled={!inputMessage.trim() || isChatLoading}
