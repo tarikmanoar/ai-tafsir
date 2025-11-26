@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import html2canvas from 'html2canvas';
 import { AyahDisplayData, Language } from '../types';
 import { Icons } from './Icons';
 
@@ -31,8 +32,10 @@ export const AyahView: React.FC<AyahViewProps> = ({
   const [isPlaying, setIsPlaying] = useState(false);
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const shareRef = useRef<HTMLDivElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
 
   // Reset audio when data changes
   useEffect(() => {
@@ -105,6 +108,33 @@ export const AyahView: React.FC<AyahViewProps> = ({
     }
   };
 
+  const handleDownloadImage = async () => {
+    if (!cardRef.current) return;
+    setIsGeneratingImage(true);
+    
+    try {
+      // Wait a moment for fonts to load if needed, though usually they are ready
+      await document.fonts.ready;
+      
+      const canvas = await html2canvas(cardRef.current, {
+        scale: 2, // Better quality
+        backgroundColor: null,
+        useCORS: true,
+        logging: false
+      });
+      
+      const link = document.createElement('a');
+      link.download = `surah-${data.surahNameEnglish}-${data.surahNumber}-${data.ayahNumber}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+      setIsShareOpen(false);
+    } catch (err) {
+      console.error("Failed to generate image", err);
+    } finally {
+      setIsGeneratingImage(false);
+    }
+  };
+
   return (
     <div className={`p-6 rounded-2xl transition-all duration-300 border ${isActive ? 'bg-white dark:bg-slate-800 border-emerald-500 shadow-lg ring-1 ring-emerald-500/50' : 'bg-white/50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 hover:border-emerald-300 dark:hover:border-emerald-700'}`}>
       {/* Header */}
@@ -147,6 +177,11 @@ export const AyahView: React.FC<AyahViewProps> = ({
                    {copied ? <Icons.Check className="w-4 h-4 text-emerald-500" /> : <Icons.Copy className="w-4 h-4" />}
                    {copied ? 'Copied!' : 'Copy Link'}
                  </button>
+                 <button onClick={handleDownloadImage} className="w-full flex items-center gap-3 px-3 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
+                   {isGeneratingImage ? <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" /> : <Icons.Image className="w-4 h-4 text-purple-500" />}
+                   {language === 'bn' ? 'ইমেজ ডাউনলোড' : 'Download Image'}
+                 </button>
+                 <div className="h-px bg-slate-100 dark:bg-slate-700 my-1"></div>
                  <button onClick={() => handleShare('facebook')} className="w-full flex items-center gap-3 px-3 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
                    <Icons.Facebook className="w-4 h-4 text-blue-600" />
                    Facebook
@@ -194,6 +229,41 @@ export const AyahView: React.FC<AyahViewProps> = ({
         >
           {translation}
         </p>
+      </div>
+
+      {/* Hidden Quote Card for Generation */}
+      <div 
+        ref={cardRef}
+        className="fixed left-[-9999px] top-0 w-[1080px] h-[1080px] flex flex-col items-center justify-center p-20 bg-gradient-to-br from-slate-900 via-emerald-950 to-slate-900 text-white text-center"
+      >
+        <div className="border border-emerald-500/30 p-16 rounded-[3rem] bg-white/5 backdrop-blur-sm w-full h-full flex flex-col justify-center items-center relative overflow-hidden shadow-2xl">
+           {/* Decorative elements */}
+           <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-emerald-400 to-emerald-600 opacity-50"></div>
+           <div className="absolute bottom-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl -mr-32 -mb-32"></div>
+           <div className="absolute top-0 left-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl -ml-32 -mt-32"></div>
+           
+           <Icons.Sparkles className="w-16 h-16 text-emerald-400 mb-12 opacity-80" />
+           
+           <div className="flex-1 flex flex-col justify-center items-center w-full">
+             <p className="font-arabic text-6xl leading-[2.5] mb-16 text-emerald-50 w-full px-8" dir="rtl">
+               {data.arabicText}
+             </p>
+             
+             <p className={`text-3xl leading-relaxed text-slate-200 max-w-4xl ${language === 'bn' ? 'font-bengali' : 'font-sans'}`}>
+               {translation}
+             </p>
+           </div>
+           
+           <div className="mt-12 flex items-center gap-4 text-emerald-400 font-medium tracking-[0.3em] uppercase text-lg">
+             <span className="w-12 h-[1px] bg-emerald-500/50"></span>
+             {data.surahNameEnglish} {data.surahNumber}:{data.ayahNumber}
+             <span className="w-12 h-[1px] bg-emerald-500/50"></span>
+           </div>
+           
+           <div className="absolute bottom-8 text-slate-500 text-sm tracking-[0.5em] opacity-40 font-light">
+             AI TAFSIR APP
+           </div>
+        </div>
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Icons } from './Icons';
 import { SearchResult, Language, AyahDisplayData } from '../types';
 
@@ -23,6 +23,60 @@ export const SearchView: React.FC<SearchViewProps> = ({
   onSelectResult,
   verseOfTheDay,
 }) => {
+  const [isListening, setIsListening] = useState(false);
+  const [voiceError, setVoiceError] = useState<string | null>(null);
+
+  const handleVoiceSearch = () => {
+    setVoiceError(null);
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      setVoiceError("Voice search is not supported in this browser.");
+      return;
+    }
+
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+
+    recognition.lang = language === 'bn' ? 'bn-BD' : 'en-US';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onstart = () => {
+      setIsListening(true);
+      setVoiceError(null);
+    };
+
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      setSearchQuery(transcript);
+      setIsListening(false);
+    };
+
+    recognition.onerror = (event: any) => {
+      console.error("Speech recognition error", event.error);
+      setIsListening(false);
+      
+      if (event.error === 'network') {
+        setVoiceError("Network error. Please check connection. (Note: Brave/Chromium may lack API keys)");
+      } else if (event.error === 'not-allowed' || event.error === 'permission-denied') {
+        setVoiceError("Microphone access denied.");
+      } else if (event.error === 'no-speech') {
+        setVoiceError("No speech detected.");
+      } else {
+        setVoiceError(`Error: ${event.error}`);
+      }
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    try {
+      recognition.start();
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   return (
     <div className="max-w-3xl mx-auto mt-8 md:mt-16 text-center pb-20">
       <div className="mb-8">
@@ -39,26 +93,43 @@ export const SearchView: React.FC<SearchViewProps> = ({
         </p>
       </div>
 
-      <form onSubmit={handleSearch} className="relative max-w-2xl mx-auto mb-12">
+      <form onSubmit={handleSearch} className="relative max-w-2xl mx-auto mb-6">
         <input 
           type="text" 
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder={language === 'bn' ? "উদাহরণ: ধৈর্য সম্পর্কে কুরআন কি বলে?" : "Example: What does Quran say about patience?"}
-          className="w-full pl-6 pr-14 py-4 rounded-full border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-lg shadow-sm focus:border-emerald-500 focus:ring-0 transition-colors"
+          className="w-full pl-6 pr-24 py-4 rounded-full border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-lg shadow-sm focus:border-emerald-500 focus:ring-0 transition-colors"
         />
-        <button 
-          type="submit"
-          disabled={isSearching}
-          className="absolute right-2 top-2 p-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full transition-colors disabled:bg-slate-400"
-        >
-          {isSearching ? (
-            <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-          ) : (
-            <Icons.Search className="w-6 h-6" />
-          )}
-        </button>
+        <div className="absolute right-2 top-2 flex gap-1">
+          <button
+            type="button"
+            onClick={handleVoiceSearch}
+            className={`p-2.5 rounded-full transition-colors ${isListening ? 'bg-red-500 text-white animate-pulse' : 'text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'}`}
+            title="Voice Search"
+          >
+            {isListening ? <Icons.MicOff className="w-6 h-6" /> : <Icons.Mic className="w-6 h-6" />}
+          </button>
+          <button 
+            type="submit"
+            disabled={isSearching}
+            className="p-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full transition-colors disabled:bg-slate-400"
+          >
+            {isSearching ? (
+              <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            ) : (
+              <Icons.Search className="w-6 h-6" />
+            )}
+          </button>
+        </div>
       </form>
+
+      {voiceError && (
+        <div className="max-w-2xl mx-auto mb-8 p-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg text-sm flex items-center justify-center gap-2 animate-in fade-in">
+          <Icons.Info className="w-4 h-4" />
+          {voiceError}
+        </div>
+      )}
 
       {/* Verse of the Day (Only show when not searching and no results) */}
       {!isSearching && searchResults.length === 0 && verseOfTheDay && (
