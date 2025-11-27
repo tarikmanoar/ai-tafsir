@@ -14,6 +14,8 @@ import { ApiKeyModal } from './components/ApiKeyModal';
 import { BookmarksView } from './components/BookmarksView';
 import { OfflineIndicator } from './components/OfflineIndicator';
 
+import { OfflineManager } from './components/OfflineManager';
+
 type ViewMode = 'reader' | 'search' | 'bookmarks';
 
 function App() {
@@ -560,6 +562,7 @@ function App() {
 
       {/* Offline Indicator */}
       <OfflineIndicator />
+      <OfflineManager />
     </div>
   );
 }
