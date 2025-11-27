@@ -35,9 +35,9 @@ function App() {
   // API Key State
   const [apiKey, setApiKey] = useState(() => {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('gemini_api_key') || '';
+      return localStorage.getItem('gemini_api_key') || process.env.GEMINI_API_KEY || '';
     }
-    return '';
+    return process.env.GEMINI_API_KEY || '';
   });
   const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState(false);
 
